@@ -25,3 +25,8 @@ Added a dedicated opaque Progress surface so the rainbow illustration no longer 
 - Added optional Space Detox and Clear Your Head actions for every day.
 - Optional extras never affect the core four-action completion score.
 - Moved sleep logging to a morning check-in and removed it from the evening log.
+
+
+## v20
+- Progress and Protocols mobile hero images are now stacked below the text.
+- White hero text no longer overlaps the artwork on small screens.

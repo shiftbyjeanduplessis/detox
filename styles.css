@@ -2061,3 +2061,73 @@ button:disabled { cursor: not-allowed; }
   .optional-detox-card { grid-template-columns: 42px 1fr 36px; padding: 12px; }
   .metric-grid.three-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
+
+/* v20: mobile hero artwork must never sit behind text */
+@media (max-width: 600px) {
+  .page-hero.protocol-hero,
+  .page-hero.progress-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    min-height: 0;
+    padding: 21px 18px 14px;
+    background: linear-gradient(145deg, #5d1ba4 0%, #7a2cd5 52%, #c445c1 100%);
+  }
+
+  .page-hero.protocol-hero::before,
+  .page-hero.progress-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: linear-gradient(180deg, rgba(47, 10, 83, 0.20), rgba(47, 10, 83, 0.04));
+    pointer-events: none;
+  }
+
+  .page-hero.protocol-hero > .eyebrow,
+  .page-hero.protocol-hero > h1,
+  .page-hero.protocol-hero > p,
+  .page-hero.progress-hero > .eyebrow,
+  .page-hero.progress-hero > h1,
+  .page-hero.progress-hero > p {
+    position: relative;
+    z-index: 2;
+    max-width: none;
+  }
+
+  .page-hero.protocol-hero > h1,
+  .page-hero.progress-hero > h1 {
+    margin-right: 0;
+    font-size: clamp(1.62rem, 7.2vw, 1.9rem);
+    line-height: 1.05;
+    text-wrap: balance;
+  }
+
+  .page-hero.protocol-hero > p,
+  .page-hero.progress-hero > p {
+    color: #fff;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  .page-hero.protocol-hero .hero-art,
+  .page-hero.progress-hero .hero-art {
+    position: relative !important;
+    inset: auto !important;
+    z-index: 2;
+    order: 10;
+    width: 100% !important;
+    height: 160px !important;
+    margin: 16px 0 0 !important;
+    border: 4px solid rgba(255,255,255,0.88);
+    border-radius: 20px;
+    transform: none !important;
+    box-shadow: 0 12px 24px rgba(38, 12, 64, 0.22);
+  }
+
+  .page-hero.protocol-hero .hero-art img,
+  .page-hero.progress-hero .hero-art img {
+    object-fit: cover;
+    object-position: center;
+  }
+}

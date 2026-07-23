@@ -1500,7 +1500,7 @@
         <button id="saveSettings" class="primary-button" type="button">Save settings</button>
         <button id="editFoodPlan" class="secondary-button" type="button">Edit food choices and rebuild plan</button>
         <button id="resetApp" class="danger-button" type="button">Reset all app data</button>
-        <div class="app-version">Detox v19 · Optional detox extras</div>
+        <div class="app-version">Detox v20 · Mobile hero readability</div>
       </div>`;
 
     document.getElementById('saveSettings').addEventListener('click', () => {
