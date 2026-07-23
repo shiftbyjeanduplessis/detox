@@ -1,0 +1,13 @@
+{
+  "name": "Detox — A 7 Day Fresh Start",
+  "short_name": "Fresh Start",
+  "description": "A guided seven-day fresh food, phone, sleep and movement reset by Perfect Women.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#fffaf2",
+  "theme_color": "#ff5b4d",
+  "icons": [
+    { "src": "assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "assets/icon-maskable.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}
