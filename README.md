@@ -19,3 +19,9 @@ Added a persistent Day 1–7 indicator beneath the app header. It shows the curr
 
 ## v17
 Added a dedicated opaque Progress surface so the rainbow illustration no longer shows through charts, labels or finish-check-in fields. Progress bars now use a solid high-contrast track and fill, with improved spacing on small screens.
+
+
+## v19
+- Added optional Space Detox and Clear Your Head actions for every day.
+- Optional extras never affect the core four-action completion score.
+- Moved sleep logging to a morning check-in and removed it from the evening log.

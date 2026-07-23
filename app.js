@@ -194,6 +194,38 @@
     }
   ];
 
+
+  const OPTIONAL_DETOX = [
+    {
+      space: { title: 'Clear your bedside table', action: 'Spend 10 minutes removing rubbish, cups and anything that does not help you rest.' },
+      mind: { title: 'Empty your head onto paper', action: 'Write down every task or worry circling in your mind. You do not need to solve the list tonight.' }
+    },
+    {
+      space: { title: 'Reset your handbag or work bag', action: 'Remove receipts, wrappers and things you no longer need. Put the essentials back neatly.' },
+      mind: { title: 'Close one small open loop', action: 'Finish, schedule or deliberately cancel one small task that has been taking up mental space.' }
+    },
+    {
+      space: { title: 'Clear one bathroom shelf', action: 'Choose one small shelf or basket. Remove empty products and place the daily essentials where they are easy to use.' },
+      mind: { title: 'Remove one unnecessary commitment', action: 'Say no, postpone or simplify one thing that does not need your energy this week.' }
+    },
+    {
+      space: { title: 'Clear one kitchen surface', action: 'Reset one counter or table so the space feels calmer and tomorrow’s meals are easier.' },
+      mind: { title: 'Take 10 quiet minutes', action: 'Sit, walk or stretch without a screen, podcast or task. Let the day become quieter.' }
+    },
+    {
+      space: { title: 'Tidy one drawer', action: 'Choose one small drawer. Keep what is useful, move misplaced items and discard obvious clutter.' },
+      mind: { title: 'Write down what you can release', action: 'Name one expectation, frustration or unfinished thought you do not want to carry through the rest of the week.' }
+    },
+    {
+      space: { title: 'Reset your car or work area', action: 'Spend 10 minutes clearing the place where you travel or work most often.' },
+      mind: { title: 'Notice what is helping', action: 'Write down three parts of the Fresh Start that have made your days feel easier or calmer.' }
+    },
+    {
+      space: { title: 'Create one calm zone', action: 'Choose one small area to keep clear after the programme, such as your bedside table, desk corner or favourite chair.' },
+      mind: { title: 'Choose what continues', action: 'Write down three simple habits or boundaries you want to keep after Day 7.' }
+    }
+  ];
+
   const defaultState = {
     onboarded: false,
     setupComplete: false,
@@ -353,6 +385,7 @@
     existing.movementMinutes = existing.movementMinutes ?? '';
     existing.mood = existing.mood ?? '';
     existing.journal = existing.journal ?? '';
+    existing.optionalTasks = { space: false, mind: false, ...(existing.optionalTasks || {}) };
     existing.tasks = existing.tasks || {};
     if (existing.missions && !Object.keys(existing.tasks).length) {
       existing.tasks = {
@@ -404,7 +437,7 @@
 
   function checkInPct(day) {
     const d = dayState(day);
-    const entries = [safeNumber(d.water) > 0, d.phone !== '', d.sleep !== '', safeNumber(d.movementMinutes) > 0, d.mood !== '', Boolean((d.journal || '').trim())];
+    const entries = [safeNumber(d.water) > 0, d.phone !== '', safeNumber(d.movementMinutes) > 0, d.mood !== '', Boolean((d.journal || '').trim())];
     return Math.round((entries.filter(Boolean).length / entries.length) * 100);
   }
 
@@ -965,6 +998,73 @@
   }
 
 
+  function morningSleepCheckInHTML(day, d, compact = false) {
+    const logged = d.sleep !== '' || d.sleepQuality !== '';
+    if (compact && logged) {
+      return `<section class="morning-sleep-card logged">
+        <div class="morning-sleep-heading"><span>${icon('sun', 22)}</span><div><small>MORNING CHECK-IN</small><h2>Last night: ${d.sleep !== '' ? `${escapeHTML(d.sleep)} hours` : 'sleep logged'}</h2><p>${d.sleepQuality ? `${escapeHTML(d.sleepQuality)} sleep quality` : 'You can update this while the night is still fresh in your mind.'}</p></div></div>
+        <button class="link-button" data-edit-morning-sleep type="button">Edit</button>
+      </section>`;
+    }
+    return `<section class="morning-sleep-card" id="morningSleepCard">
+      <div class="morning-sleep-heading"><span>${icon('sun', 22)}</span><div><small>MORNING CHECK-IN</small><h2>How did you sleep last night?</h2><p>Log this in the morning. It is separate from the evening check-in and does not affect your completion score.</p></div></div>
+      <div class="morning-sleep-fields">
+        <label><span>Hours slept</span><input data-morning-sleep-hours type="number" min="0" max="24" step="0.1" value="${escapeHTML(d.sleep)}" placeholder="e.g. 7.5" /></label>
+        <label><span>Sleep quality</span><select data-morning-sleep-quality><option value="">Choose</option>${['Poor','Restless','Okay','Good','Excellent'].map(v => `<option value="${v}" ${d.sleepQuality === v ? 'selected' : ''}>${v}</option>`).join('')}</select></label>
+      </div>
+      <button class="secondary-button morning-sleep-save" data-save-morning-sleep type="button">Save morning check-in ${icon('check', 18)}</button>
+    </section>`;
+  }
+
+  function bindMorningSleepCheckIn(day, rerender) {
+    const d = dayState(day);
+    document.querySelector('[data-save-morning-sleep]')?.addEventListener('click', () => {
+      d.sleep = document.querySelector('[data-morning-sleep-hours]')?.value || '';
+      d.sleepQuality = document.querySelector('[data-morning-sleep-quality]')?.value || '';
+      saveState();
+      showToast('Morning sleep check-in saved');
+      rerender?.();
+    });
+    document.querySelector('[data-edit-morning-sleep]')?.addEventListener('click', () => {
+      const card = document.querySelector('.morning-sleep-card');
+      if (!card) return;
+      card.outerHTML = morningSleepCheckInHTML(day, d, false);
+      bindMorningSleepCheckIn(day, rerender);
+    });
+  }
+
+  function optionalDetoxHTML(day, d) {
+    const actions = OPTIONAL_DETOX[day - 1];
+    if (!actions) return '';
+    return `<section class="optional-detox-section">
+      <div class="section-heading optional-heading"><div><span>OPTIONAL DETOX EXTRAS</span><h2>Clear a little space inside and out</h2><p>These are optional and never affect your programme-completion score.</p></div></div>
+      <div class="optional-detox-grid">
+        ${optionalDetoxCardHTML('space', 'Space Detox', actions.space, d)}
+        ${optionalDetoxCardHTML('mind', 'Clear Your Head', actions.mind, d)}
+      </div>
+    </section>`;
+  }
+
+  function optionalDetoxCardHTML(type, label, action, d) {
+    const done = Boolean(d.optionalTasks?.[type]);
+    return `<article class="optional-detox-card ${type} ${done ? 'complete' : ''}">
+      <div class="optional-detox-icon">${icon(type === 'space' ? 'reset' : 'journal', 23)}</div>
+      <div><span>${escapeHTML(label)} · OPTIONAL</span><h3>${escapeHTML(action.title)}</h3><p>${escapeHTML(action.action)}</p></div>
+      <button class="optional-task-check ${done ? 'done' : ''}" data-optional-task="${type}" type="button" aria-label="Mark ${escapeHTML(label)} complete">${icon('check', 18)}</button>
+    </article>`;
+  }
+
+  function bindOptionalDetoxButtons(day, rerender) {
+    document.querySelectorAll('[data-optional-task]').forEach(button => button.addEventListener('click', () => {
+      const d = dayState(day);
+      const task = button.dataset.optionalTask;
+      d.optionalTasks[task] = !d.optionalTasks[task];
+      saveState();
+      rerender?.();
+    }));
+  }
+
+
   function renderToday() {
     renderDayIndicator();
     const day = currentDay();
@@ -973,8 +1073,10 @@
     const pct = completionPct(day);
     const windDownTime = subtractMinutes(state.profile.bedtime, plan.sleep.windDown);
     const behind = scheduledDay() > day;
-    main.innerHTML = `<section class="day-hero"><div class="hero-copy"><span class="eyebrow">DAY ${day} OF 7 · ${escapeHTML(plan.phase)}</span><h1>${escapeHTML(plan.title)}</h1><p>${escapeHTML(plan.subtitle)}</p></div><div class="progress-orb" style="--pct:${pct}"><div><strong>${pct}%</strong><span>actions</span></div></div></section>${behind ? `<div class="recovery-banner"><span>${icon('calendar',22)}</span><div><strong>You are continuing Day ${day}</strong><p>The calendar has moved on, but this day is unfinished. Continue it, or skip it deliberately.</p></div><button id="skipDayBtn" type="button">Skip to Day ${Math.min(7,day+1)}</button></div>`:''}<div class="section-heading"><div><span>TODAY'S FOUR ACTIONS</span><h2>Complete these before worrying about tracking</h2></div></div><div class="protocol-card-list">${['food','phone','movement','sleep'].map(type=>protocolCardHTML(type,plan[type],d,day)).join('')}</div>${dayMealPlanHTML(day)}<div class="anchor-strip"><div><span>${icon('clock',19)}</span><small>Wind-down starts</small><strong>${formatTime(windDownTime)}</strong></div><div><span>${icon('sun',19)}</span><small>Wake anchor</small><strong>${formatTime(state.profile.wakeTime)}</strong></div></div><div class="section-heading"><div><span>OPTIONAL CHECK-IN · ${checkInPct(day)}%</span><h2>Record what actually happened</h2></div><button id="editTracking" class="link-button" type="button">Add details</button></div><div class="metric-grid">${metricHTML('water','Water',safeNumber(d.water)?`${safeNumber(d.water)} cups`:'Not logged')}${metricHTML('walk','Movement',d.movementMinutes!==''?`${escapeHTML(d.movementMinutes)} min`:'Not logged')}${metricHTML('phone','Phone use',formatPhoneDuration(d.phoneTotalMinutes,d.phone))}${metricHTML('moon','Sleep',d.sleep!==''?`${escapeHTML(d.sleep)} h`:'Not logged')}</div><div class="quick-log-card"><div><span class="quick-log-icon">${icon('water',24)}</span><div><strong>Water so far</strong><small>This does not affect your programme-completion score.</small></div></div><div class="stepper"><button id="waterMinus" type="button">${icon('minus',18)}</button><strong>${safeNumber(d.water)}</strong><button id="waterAdd" type="button">${icon('plus',18)}</button></div></div>${nextDayBriefingHTML(day)}`;
+    main.innerHTML = `<section class="day-hero"><div class="hero-copy"><span class="eyebrow">DAY ${day} OF 7 · ${escapeHTML(plan.phase)}</span><h1>${escapeHTML(plan.title)}</h1><p>${escapeHTML(plan.subtitle)}</p></div><div class="progress-orb" style="--pct:${pct}"><div><strong>${pct}%</strong><span>actions</span></div></div></section>${behind ? `<div class="recovery-banner"><span>${icon('calendar',22)}</span><div><strong>You are continuing Day ${day}</strong><p>The calendar has moved on, but this day is unfinished. Continue it, or skip it deliberately.</p></div><button id="skipDayBtn" type="button">Skip to Day ${Math.min(7,day+1)}</button></div>`:''}${morningSleepCheckInHTML(day, d, true)}<div class="section-heading"><div><span>TODAY'S FOUR ACTIONS</span><h2>Complete these before worrying about tracking</h2></div></div><div class="protocol-card-list">${['food','phone','movement','sleep'].map(type=>protocolCardHTML(type,plan[type],d,day)).join('')}</div>${dayMealPlanHTML(day)}<div class="anchor-strip"><div><span>${icon('clock',19)}</span><small>Wind-down starts</small><strong>${formatTime(windDownTime)}</strong></div><div><span>${icon('sun',19)}</span><small>Wake anchor</small><strong>${formatTime(state.profile.wakeTime)}</strong></div></div>${optionalDetoxHTML(day, d)}<div class="section-heading"><div><span>OPTIONAL DAILY NOTES · ${checkInPct(day)}%</span><h2>Record what happened during the day</h2></div><button id="editTracking" class="link-button" type="button">Add details</button></div><div class="metric-grid three-metrics">${metricHTML('water','Water',safeNumber(d.water)?`${safeNumber(d.water)} cups`:'Not logged')}${metricHTML('walk','Movement',d.movementMinutes!==''?`${escapeHTML(d.movementMinutes)} min`:'Not logged')}${metricHTML('phone','Phone use',formatPhoneDuration(d.phoneTotalMinutes,d.phone))}</div><div class="quick-log-card"><div><span class="quick-log-icon">${icon('water',24)}</span><div><strong>Water so far</strong><small>This does not affect your programme-completion score.</small></div></div><div class="stepper"><button id="waterMinus" type="button">${icon('minus',18)}</button><strong>${safeNumber(d.water)}</strong><button id="waterAdd" type="button">${icon('plus',18)}</button></div></div>${nextDayBriefingHTML(day)}`;
     bindTaskButtons(day);
+    bindMorningSleepCheckIn(day, renderToday);
+    bindOptionalDetoxButtons(day, renderToday);
     bindRecipeCards();
     document.querySelectorAll('[data-setup-recipe]').forEach(button=>button.addEventListener('click',()=>openRecipe(button.dataset.setupRecipe)));
     document.getElementById('editTracking').addEventListener('click',()=>renderDayDetail(day,true));
@@ -1063,6 +1165,7 @@
       </section>
 
       ${preview ? `<div class="preview-banner">${icon('calendar', 20)} <span>This is a preview. Day ${day} begins after the earlier days are resolved.</span></div>` : ''}
+      ${preview ? '' : morningSleepCheckInHTML(day, d, false)}
       ${dayMealPlanHTML(day)}
       <div class="guided-sections">
         ${guidedSectionHTML('food', 'Fresh food', plan.food, d)}
@@ -1071,15 +1174,14 @@
         ${guidedSectionHTML('sleep', 'Sleep protocol', plan.sleep, d, `Start winding down at ${formatTime(windDownTime)} for your ${formatTime(state.profile.bedtime)} bedtime.`)}
       </div>
 
+      ${preview ? '' : optionalDetoxHTML(day, d)}
       ${preview ? '' : nextDayBriefingHTML(day)}
-      <div class="section-heading"><div><span>OPTIONAL DAILY LOG</span><h2>Record what actually happened</h2></div></div>
+      <div class="section-heading"><div><span>OPTIONAL DAILY LOG</span><h2>Record what happened during the day</h2></div></div>
       <div class="tracking-card" id="trackingCard">
         <div class="tracking-grid">
           <div class="field"><label for="dayWater">Water cups</label><input id="dayWater" type="number" min="0" max="30" value="${safeNumber(d.water)}" /></div>
           <div class="field"><label for="dayMovement">Movement minutes</label><input id="dayMovement" type="number" min="0" max="300" value="${escapeHTML(d.movementMinutes)}" placeholder="e.g. ${plan.movement.minutes}" /></div>
-          <div class="field"><label>Phone use</label><div class="split-input-row"><label><span>Hours</span><input id="dayPhoneHours" type="number" min="0" max="23" step="1" value="${escapeHTML(d.phoneHours)}" /></label><label><span>Minutes</span><input id="dayPhoneMinutes" type="number" min="0" max="59" step="1" value="${escapeHTML(d.phoneMinutes)}" /></label></div></div>
-          <div class="field"><label for="daySleep">Sleep (hours)</label><input id="daySleep" type="number" min="0" max="24" step="0.1" value="${escapeHTML(d.sleep)}" placeholder="e.g. 7.5" /></div>
-          <div class="field full"><label for="sleepQuality">Sleep quality</label><select id="sleepQuality"><option value="">Choose</option>${['Poor','Restless','Okay','Good','Excellent'].map(v => `<option value="${v}" ${d.sleepQuality === v ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
+          <div class="field full"><label>Phone use</label><div class="split-input-row"><label><span>Hours</span><input id="dayPhoneHours" type="number" min="0" max="23" step="1" value="${escapeHTML(d.phoneHours)}" /></label><label><span>Minutes</span><input id="dayPhoneMinutes" type="number" min="0" max="59" step="1" value="${escapeHTML(d.phoneMinutes)}" /></label></div></div>
         </div>
         <div class="mood-block"><label>How do you feel?</label><div class="mood-row">${['Low','Flat','Okay','Good','Great'].map((m, idx) => `<button class="mood-button ${d.mood === m ? 'active' : ''}" data-mood="${m}" type="button"><span>${['1','2','3','4','5'][idx]}</span><small>${m}</small></button>`).join('')}</div></div>
         <div class="field journal-field"><label for="dayJournal">A quick note</label><textarea id="dayJournal" placeholder="What helped today? What would you change tomorrow?">${escapeHTML(d.journal)}</textarea></div>
@@ -1087,6 +1189,10 @@
       </div>`;
 
     bindTaskButtons(day);
+    if (!preview) {
+      bindMorningSleepCheckIn(day, () => renderDayDetail(day, false));
+      bindOptionalDetoxButtons(day, () => renderDayDetail(day, false));
+    }
     document.querySelectorAll('[data-setup-recipe]').forEach(button => button.addEventListener('click', () => openRecipe(button.dataset.setupRecipe)));
     if (preview) document.querySelectorAll('[data-task], #saveDayBtn, [data-mood]').forEach(control => { control.disabled = true; });
     document.querySelectorAll('[data-mood]').forEach(btn => btn.addEventListener('click', () => {
@@ -1101,8 +1207,6 @@
       d.phoneMinutes = document.getElementById('dayPhoneMinutes').value;
       d.phoneTotalMinutes = d.phoneHours === '' && d.phoneMinutes === '' ? '' : safeNumber(d.phoneHours) * 60 + Math.min(59, Math.max(0, safeNumber(d.phoneMinutes)));
       d.phone = d.phoneTotalMinutes === '' ? '' : (d.phoneTotalMinutes / 60).toFixed(2);
-      d.sleep = document.getElementById('daySleep').value;
-      d.sleepQuality = document.getElementById('sleepQuality').value;
       d.journal = document.getElementById('dayJournal').value;
       saveState();
       showToast(`Day ${day} saved`);
@@ -1396,7 +1500,7 @@
         <button id="saveSettings" class="primary-button" type="button">Save settings</button>
         <button id="editFoodPlan" class="secondary-button" type="button">Edit food choices and rebuild plan</button>
         <button id="resetApp" class="danger-button" type="button">Reset all app data</button>
-        <div class="app-version">Detox v17 · Progress background final</div>
+        <div class="app-version">Detox v19 · Optional detox extras</div>
       </div>`;
 
     document.getElementById('saveSettings').addEventListener('click', () => {
