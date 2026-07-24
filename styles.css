@@ -2131,3 +2131,98 @@ button:disabled { cursor: not-allowed; }
     object-position: center;
   }
 }
+
+/* v21 Day 0 introduction video */
+.intro-video-section {
+  margin: 4px 0 18px;
+  padding: 12px;
+  border: 1px solid rgba(122,57,218,0.13);
+  border-radius: 22px;
+  background: linear-gradient(145deg, #fffaf3, #f8efff);
+}
+.intro-video-mount {
+  width: min(100%, 330px);
+  margin: 0 auto;
+}
+.intro-video-poster {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  border-radius: 20px;
+  color: white;
+  background: #4e177f;
+  box-shadow: 0 15px 32px rgba(64,23,95,0.18);
+}
+.intro-video-poster img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.intro-video-poster::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(37,10,58,0.05) 25%, rgba(37,10,58,0.86) 100%);
+}
+.intro-video-overlay {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 20px;
+  z-index: 1;
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+  text-align: center;
+}
+.intro-play-icon {
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  margin-bottom: 4px;
+  border: 2px solid rgba(255,255,255,0.72);
+  border-radius: 50%;
+  color: white;
+  background: rgba(122,57,218,0.88);
+  box-shadow: 0 10px 22px rgba(20,5,37,0.30);
+}
+.intro-video-overlay strong {
+  font-size: 1rem;
+}
+.intro-video-overlay small {
+  color: rgba(255,255,255,0.86);
+  font-size: 0.72rem;
+}
+.intro-video-note {
+  margin: 10px 2px 0;
+  color: #65556d;
+  font-size: 0.74rem;
+  line-height: 1.45;
+  text-align: center;
+}
+.intro-video-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  overflow: hidden;
+  border-radius: 20px;
+  background: #160b1e;
+  box-shadow: 0 15px 32px rgba(64,23,95,0.18);
+}
+.intro-video-frame iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+@media (max-width: 420px) {
+  .intro-video-section { padding: 9px; }
+  .intro-video-mount { width: min(100%, 285px); }
+}

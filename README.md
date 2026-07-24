@@ -30,3 +30,8 @@ Added a dedicated opaque Progress surface so the rainbow illustration no longer 
 ## v20
 - Progress and Protocols mobile hero images are now stacked below the text.
 - White hero text no longer overlaps the artwork on small screens.
+
+
+## v21
+- Added the unlisted YouTube introduction video to Day 0 setup.
+- The video is click-to-play, does not autoplay, and can be skipped.

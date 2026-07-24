@@ -58,7 +58,8 @@
       close: '<path d="M6 6l12 12M18 6 6 18"></path>',
       plus: '<path d="M12 5v14M5 12h14"></path>',
       minus: '<path d="M5 12h14"></path>',
-      edit: '<path d="m4 20 4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20Z"></path><path d="m14 7 3 3"></path>'
+      edit: '<path d="m4 20 4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20Z"></path><path d="m14 7 3 3"></path>',
+      play: '<path d="m9 7 8 5-8 5V7Z"></path><circle cx="12" cy="12" r="9"></circle>'
     };
     return `<svg class="ui-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name] || paths.leaf}</svg>`;
   };
@@ -874,7 +875,7 @@
     let body = '';
 
     if (step === 1) {
-      body = `<div class="setup-card wizard-intro-card"><div class="setup-heading"><span>WELCOME</span><h1>Prepare first, then begin your seven days</h1><p>Day 0 helps you understand the progression, choose food you enjoy and shop before Day 1. Setup does not count as one of the seven days.</p></div><div class="phase-explainer large"><div><strong>Days 1–3</strong><span>Solid fruit-and-vegetable meals</span></div><div><strong>Day 4</strong><span>Filling soups and smoothies</span></div><div><strong>Days 5–7</strong><span>A mix of solid and liquid meals</span></div></div><div class="setup-explainer-grid"><article><span>${icon('leaf', 23)}</span><div><strong>Fresh food</strong><small>Plant-focused meals with optional low-fat plain yoghurt. No tofu, eggs, cheese or feta in the suggested programme.</small></div></article><article><span>${icon('phone', 23)}</span><div><strong>Phone reset</strong><small>Morning, mealtime and bedtime boundaries progress across the week.</small></div></article><article><span>${icon('walk', 23)}</span><div><strong>Daily movement</strong><small>Manageable walking, mobility and gentle strength every day.</small></div></article><article><span>${icon('moon', 23)}</span><div><strong>Sleep routine</strong><small>Your bedtime and wake time create each day’s wind-down plan.</small></div></article></div><div class="safety-note"><strong>Day 4 is not a fast.</strong><span>It uses substantial soups and smoothies rather than juice alone. If you are hungry or do not feel well, add more food or choose a solid meal.</span></div></div>`;
+      body = `<div class="setup-card wizard-intro-card"><div class="setup-heading"><span>WELCOME</span><h1>Prepare first, then begin your seven days</h1><p>Watch the short introduction, or continue straight to setup. Day 0 helps you understand the progression, choose food you enjoy and shop before Day 1.</p></div><section class="intro-video-section" aria-label="Detox programme introduction video"><div id="introVideoMount" class="intro-video-mount"><button id="playIntroVideo" class="intro-video-poster" type="button" aria-label="Play the Detox introduction video"><img src="https://i.ytimg.com/vi/TY7_IW_RKbM/hqdefault.jpg" alt="Detox introduction video preview" loading="lazy" /><span class="intro-video-overlay"><span class="intro-play-icon">${icon('play', 34)}</span><strong>Watch the introduction</strong><small>Optional · opens here in the app</small></span></button></div><p class="intro-video-note">The video is optional. You can continue setup without watching it.</p></section><div class="phase-explainer large"><div><strong>Days 1–3</strong><span>Solid fruit-and-vegetable meals</span></div><div><strong>Day 4</strong><span>Filling soups and smoothies</span></div><div><strong>Days 5–7</strong><span>A mix of solid and liquid meals</span></div></div><div class="setup-explainer-grid"><article><span>${icon('leaf', 23)}</span><div><strong>Fresh food</strong><small>Plant-focused meals with optional low-fat plain yoghurt. No tofu, eggs, cheese or feta in the suggested programme.</small></div></article><article><span>${icon('phone', 23)}</span><div><strong>Phone reset</strong><small>Morning, mealtime and bedtime boundaries progress across the week.</small></div></article><article><span>${icon('walk', 23)}</span><div><strong>Daily movement</strong><small>Manageable walking, mobility and gentle strength every day.</small></div></article><article><span>${icon('moon', 23)}</span><div><strong>Sleep routine</strong><small>Your bedtime and wake time create each day’s wind-down plan.</small></div></article></div><div class="safety-note"><strong>Day 4 is not a fast.</strong><span>It uses substantial soups and smoothies rather than juice alone. If you are hungry or do not feel well, add more food or choose a solid meal.</span></div></div>`;
     }
 
     if (step === 2) {
@@ -898,6 +899,14 @@
     }
 
     main.innerHTML = setupWizardShell(step, body, step === 6 ? 'Complete setup' : 'Continue');
+
+    if (step === 1) {
+      document.getElementById('playIntroVideo')?.addEventListener('click', () => {
+        const mount = document.getElementById('introVideoMount');
+        if (!mount) return;
+        mount.innerHTML = `<div class="intro-video-frame"><iframe src="https://www.youtube-nocookie.com/embed/TY7_IW_RKbM?playsinline=1&rel=0" title="Detox — A 7 Day Fresh Start introduction" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>`;
+      });
+    }
 
     const go = nextStep => { state.setupStep = Math.min(6, Math.max(1, nextStep)); saveState(); renderSetup(); };
     document.getElementById('setupBackBtn')?.addEventListener('click', () => go(step - 1));

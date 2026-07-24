@@ -1,4 +1,4 @@
-const CACHE = 'fresh-start-v20-mobile-hero-fix';
+const CACHE = 'fresh-start-v21-intro-video';
 const FILES = ['./', './index.html', './styles.css', './app.js', './recipes.js', './manifest.webmanifest', './assets/icon.svg', './assets/icon-maskable.svg', './assets/art-food.png', './assets/art-phone.png', './assets/art-move.png', './assets/art-sleep.png', './assets/art-recipes.png', './assets/art-progress.png', './assets/app-shot.png', './assets/cat-smoothies.png', './assets/cat-fruit-salads.png', './assets/cat-soups.png', './assets/cat-stir-fries.png', './assets/cat-vegetable-meals.png', './assets/cat-air-fryer.png', './assets/logo-detox-full.png', './assets/logo-detox-full-transparent.png', './assets/logo-detox-word.png', './assets/rainbow-background.jpg'];
 self.addEventListener('install', event => event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES))));
 self.addEventListener('activate', event => event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key))))));
