@@ -32,6 +32,9 @@ Added a dedicated opaque Progress surface so the rainbow illustration no longer 
 - White hero text no longer overlaps the artwork on small screens.
 
 
-## v21
-- Added the unlisted YouTube introduction video to Day 0 setup.
-- The video is click-to-play, does not autoplay, and can be skipped.
+## v22
+Removed the extra custom video play overlay. The Day 0 introduction now displays the YouTube player directly, with only YouTube’s native play button.
+
+
+## v23
+Added permanent Do / Don’t food rules, a 2 litre water target, one planned starch serving per day, no nuts or edible seeds, recipe-library enforcement, headache safety wording and a medical disclaimer.

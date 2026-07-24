@@ -594,9 +594,31 @@
 
   function programmeRecipeAllowed(recipe) {
     const haystack = recipeHaystack(recipe);
-    const excludedByProgramme = [/\btofu\b/, /\beggs?\b/, /\bcheese\b/, /\bfeta\b/].some(pattern => pattern.test(haystack));
+    const excludedByProgramme = [
+      /\btofu\b/, /\beggs?\b/, /\bcheese\b/, /\bfeta\b/,
+      /\bnuts?\b/, /\bnut butter\b/, /\bpeanut\b/, /\balmond\b/, /\bcashew\b/,
+      /\bwalnut\b/, /\bpecan\b/, /\bpistachio\b/, /\bhazelnut\b/,
+      /\bseeds?\b/, /\bchia\b/, /\bsesame\b/, /\btahini\b/
+    ].some(pattern => pattern.test(haystack));
     const excludedByUser = avoidTerms().some(term => haystack.includes(term));
     return !excludedByProgramme && !excludedByUser;
+  }
+
+  const STARCH_TERMS = ['oats', 'potato', 'sweet potato', 'rice', 'quinoa', 'pasta', 'barley', 'bread', 'couscous', 'noodles', 'corn', 'maize', 'polenta'];
+
+  function recipeContainsStarch(recipe) {
+    const haystack = recipeHaystack(recipe);
+    return STARCH_TERMS.some(term => haystack.includes(term));
+  }
+
+  function rankedFoodRecipesByStarch(categories, count, hasStarch, excluded = new Set(), extraScore = () => 0) {
+    const categorySet = new Set(categories);
+    return recipes
+      .filter(recipe => categorySet.has(recipe.category) && !excluded.has(recipe.id) && programmeRecipeAllowed(recipe) && recipeContainsStarch(recipe) === hasStarch)
+      .map((recipe, index) => ({ recipe, score: recipePreferenceScore(recipe) + extraScore(recipe), index }))
+      .sort((a, b) => b.score - a.score || a.index - b.index)
+      .slice(0, count)
+      .map(item => item.recipe);
   }
 
   function recipePreferenceScore(recipe) {
@@ -649,23 +671,25 @@
   }
 
   function buildFoodSuggestions() {
-    const fruitSalads = rankedFoodRecipes(['Fruit Salads'], 3);
-    const solidMains = rankedFoodRecipes(['Stir-Fries', 'Air Fryer', 'Vegetable Meals'], 6);
-    const smoothies = rankedFoodRecipes(['Smoothies'], 3, new Set(), fillingLiquidScore);
-    const liquidSoups = rankedLiquidSoups(3);
-    const soups = rankedFoodRecipes(['Soups'], 4, new Set(), fillingLiquidScore);
+    const fruitSalads = rankedFoodRecipesByStarch(['Fruit Salads'], 4, false);
+    const solidNonStarch = rankedFoodRecipesByStarch(['Stir-Fries', 'Air Fryer', 'Vegetable Meals'], 8, false);
+    const solidStarch = rankedFoodRecipesByStarch(['Stir-Fries', 'Air Fryer', 'Vegetable Meals'], 6, true);
+    const smoothieNonStarch = rankedFoodRecipesByStarch(['Smoothies'], 5, false, new Set(), fillingLiquidScore);
+    const smoothieStarch = rankedFoodRecipesByStarch(['Smoothies'], 4, true, new Set(), fillingLiquidScore);
+    const soupNonStarch = rankedFoodRecipesByStarch(['Soups'], 6, false, new Set(), fillingLiquidScore);
+    const soupStarch = rankedFoodRecipesByStarch(['Soups'], 5, true, new Set(), fillingLiquidScore);
 
     const mealPlan = [
-      { day: 1, phase: 'Solid fruit & vegetable meals', note: 'No soups or smoothies today.', breakfast: takeRecipe(fruitSalads, 0), lunch: takeRecipe(solidMains, 0), dinner: takeRecipe(solidMains, 1) },
-      { day: 2, phase: 'Solid fruit & vegetable meals', note: 'Use leftovers whenever that makes the day easier.', breakfast: takeRecipe(fruitSalads, 1), lunch: takeRecipe(solidMains, 2), dinner: takeRecipe(solidMains, 3) },
-      { day: 3, phase: 'Solid meals + prepare Day 4', note: 'Prepare tomorrow’s soup or smoothie tonight.', breakfast: takeRecipe(fruitSalads, 2), lunch: takeRecipe(solidMains, 4), dinner: takeRecipe(solidMains, 5) },
-      { day: 4, phase: 'Filling liquid meals', note: 'Smoothies and substantial soups—not juice alone. Add another filling serving or a solid meal if needed.', breakfast: takeRecipe(smoothies, 0), lunch: takeRecipe(liquidSoups, 0, soups), dinner: takeRecipe(liquidSoups, 1, soups) },
-      { day: 5, phase: 'Mixed meals', note: 'One liquid meal and two solid meals.', breakfast: takeRecipe(smoothies, 1), lunch: takeRecipe(soups, 2), dinner: takeRecipe(solidMains, 0) },
-      { day: 6, phase: 'Mixed meals', note: 'Mix formats and repeat favourites.', breakfast: takeRecipe(fruitSalads, 1), lunch: takeRecipe(soups, 3), dinner: takeRecipe(solidMains, 2) },
-      { day: 7, phase: 'Mixed transition day', note: 'Choose the combination you would realistically continue.', breakfast: takeRecipe(smoothies, 2), lunch: takeRecipe(solidMains, 4), dinner: takeRecipe(soups, 1) }
+      { day: 1, phase: 'Solid fruit & vegetable meals', note: 'One planned starch serving today, at dinner. No soups or smoothies.', breakfast: takeRecipe(fruitSalads, 0), lunch: takeRecipe(solidNonStarch, 0), dinner: takeRecipe(solidStarch, 0) },
+      { day: 2, phase: 'Solid fruit & vegetable meals', note: 'One planned starch serving today, at lunch. Use leftovers when helpful.', breakfast: takeRecipe(fruitSalads, 1), lunch: takeRecipe(solidStarch, 1), dinner: takeRecipe(solidNonStarch, 1) },
+      { day: 3, phase: 'Solid meals + prepare Day 4', note: 'One planned starch serving today, at dinner. Prepare tomorrow’s soup or smoothie tonight.', breakfast: takeRecipe(fruitSalads, 2), lunch: takeRecipe(solidNonStarch, 2), dinner: takeRecipe(solidStarch, 2) },
+      { day: 4, phase: 'Filling liquid meals', note: 'Smoothies and substantial soups—not juice alone. One liquid meal contains the day’s starch serving.', breakfast: takeRecipe(smoothieStarch, 0), lunch: takeRecipe(soupNonStarch, 0), dinner: takeRecipe(soupNonStarch, 1) },
+      { day: 5, phase: 'Mixed meals', note: 'One starch serving today, with a mix of solid and liquid meals.', breakfast: takeRecipe(smoothieNonStarch, 0), lunch: takeRecipe(soupStarch, 0), dinner: takeRecipe(solidNonStarch, 3) },
+      { day: 6, phase: 'Mixed meals', note: 'One starch serving today. Repeat favourites if that keeps the day simple.', breakfast: takeRecipe(fruitSalads, 3), lunch: takeRecipe(soupNonStarch, 2), dinner: takeRecipe(solidStarch, 3) },
+      { day: 7, phase: 'Mixed transition day', note: 'One starch serving today. Choose the combination you would realistically continue.', breakfast: takeRecipe(smoothieNonStarch, 1), lunch: takeRecipe(solidNonStarch, 4), dinner: takeRecipe(soupStarch, 1) }
     ];
     const all = uniqueRecipesFromPlan(mealPlan);
-    return { fruitSalads, solidMains, smoothies, liquidSoups, soups, all, mealPlan, shopping: buildShoppingList(mealPlan) };
+    return { fruitSalads, solidNonStarch, solidStarch, smoothieNonStarch, smoothieStarch, soupNonStarch, soupStarch, all, mealPlan, shopping: buildShoppingList(mealPlan) };
   }
 
   function shoppingKey(group, label) {
@@ -694,9 +718,7 @@
       ['chickpea', 'Canned chickpeas'], ['bean', 'Canned beans'], ['lentil', 'Lentils'],
       ['brown rice', 'Brown rice'], ['quinoa', 'Quinoa'], ['oats', 'Oats'],
       ['yoghurt', 'Low-fat plain yoghurt'], ['coconut milk', 'Light coconut milk'],
-      ['soy sauce', 'Low-sodium soy sauce'], ['sesame seeds', 'Sesame seeds'],
-      ['chia', 'Chia seeds'], ['pumpkin', 'Pumpkin or sunflower seeds'],
-      ['peanut butter', 'Unsweetened peanut butter'], ['olive oil', 'Olive oil or cooking spray'],
+      ['soy sauce', 'Low-sodium soy sauce'], ['olive oil', 'Olive oil or cooking spray'],
       ['tomato paste', 'Tomato paste'], ['pasta', 'Wholewheat pasta or barley']
     ];
     const basics = [];
@@ -757,7 +779,7 @@
     if (!state.foodPreferences?.planGenerated) return '';
     const suggestions = buildFoodSuggestions();
     return `<div id="foodPlanResults" class="food-plan-results">
-      <div class="suggestion-notice"><strong>This is only a suggestion.</strong><span>Repeat favourites, swap meals, change portions and use leftovers. You do not have to follow the plan exactly.</span></div>
+      <div class="suggestion-notice"><strong>This is only a suggestion.</strong><span>Repeat favourites, swap meals, change portions and use leftovers. You do not have to follow the plan exactly.</span></div>${freshStartRulesHTML(true)}
       <div class="phase-explainer"><div><strong>Days 1–3</strong><span>Solid fruit-and-vegetable meals</span></div><div><strong>Day 4</strong><span>Filling smoothies and soups</span></div><div><strong>Days 5–7</strong><span>A flexible mix</span></div></div>
       <section class="food-result-section"><div class="food-result-heading"><span>${icon('calendar', 21)}</span><div><h3>Your structured 7-day meal suggestion</h3><p>The meals follow the programme progression automatically.</p></div></div><div class="simple-meal-plan">${suggestions.mealPlan.map(mealPlanDayHTML).join('')}</div></section>
       <section class="food-result-section shopping-result"><div class="food-result-heading"><span>${icon('leaf', 21)}</span><div><h3>Your recipe-based shopping list</h3><p>This list is built from the actual recipes above. Quantities remain approximate, so check recipe servings and your cupboards first.</p></div></div>${shoppingListHTML(suggestions.shopping)}</section>
@@ -854,6 +876,44 @@
   }
 
 
+  function freshStartRulesHTML(compact = false) {
+    return `<section class="fresh-start-rules ${compact ? 'compact' : ''}">
+      <div class="food-rules-heading"><span>${icon('leaf', 22)}</span><div><small>FRESH START FOOD RULES</small><h2>Simple do and don’t list</h2><p>Use these rules across all seven days. The meal suggestions have been structured around them.</p></div></div>
+      <div class="food-rules-grid">
+        <article class="food-rule-list do"><h3>${icon('check', 18)} Do</h3><ul>
+          <li>Use fresh or frozen fruit and vegetables.</li>
+          <li>Have one planned starch serving per day—for example oats, rice, quinoa, potato, sweet potato, wholegrain pasta or bread.</li>
+          <li>Aim for 2 litres of water, spread across the day, unless a healthcare professional has told you to limit or change your fluids.</li>
+          <li>Use fresh herbs, dried herbs and spices to make simple meals enjoyable.</li>
+          <li>Eat enough. Repeat meals, adjust portions or add more permitted food when needed.</li>
+        </ul></article>
+        <article class="food-rule-list dont"><h3>${icon('close', 18)} Don’t</h3><ul>
+          <li>Do not include nuts, nut butters or edible seeds such as chia, sesame, sunflower or pumpkin seeds.</li>
+          <li>Do not add a second planned starch serving on the same day.</li>
+          <li>Do not turn Day 4 into a juice fast. Use filling smoothies and substantial soups.</li>
+          <li>Do not assume feeling unwell is a normal “detox” reaction or something you must push through.</li>
+        </ul></article>
+      </div>
+      <div class="headache-guidance"><span>${icon('heart', 20)}</span><div><strong>If you get a headache</strong><p>Drink water, eat and rest. If you normally use an over-the-counter headache medicine and it is safe for you, take it only as directed on the label. Do not exceed the dose or combine medicines containing the same active ingredient.</p></div></div>
+      <div class="programme-disclaimer"><strong>Important safety disclaimer</strong><p>This programme provides general wellbeing information and is not medical advice, diagnosis or treatment. “Detox” is the programme name; this is not a medical detox or fast. Check with a healthcare professional before starting if you are pregnant or breastfeeding, have a medical condition, follow a prescribed diet, take medication affected by food or fluid changes, have been advised to restrict fluids, or have a history of disordered eating. Stop and seek medical advice if you feel unwell. Seek urgent help for a sudden or severe headache, a worsening or persistent headache, or a headache with confusion, weakness, vision changes, fever, a stiff neck, repeated vomiting or after a head injury.</p></div>
+    </section>`;
+  }
+
+  function foodRulesAccessCardHTML() {
+    return `<section class="food-rules-access-card"><span>${icon('leaf', 23)}</span><div><small>PROGRAMME FOOD RULES</small><h2>One starch · 2 L water · no nuts or seeds</h2><p>Fresh and frozen fruit and vegetables are both allowed.</p></div><button data-open-food-rules class="secondary-button" type="button">View do & don’t list</button></section>`;
+  }
+
+  function openFoodRulesModal() {
+    modalRoot.innerHTML = `<div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="Fresh Start food rules"><div class="modal-sheet food-rules-modal"><div class="modal-handle"></div><div class="modal-top"><div><span class="eyebrow">FOOD GUIDE</span><h2>Fresh Start do and don’t list</h2></div><button class="close-button" data-close-modal type="button">${icon('close', 20)}</button></div>${freshStartRulesHTML(false)}</div></div>`;
+    const close = () => { modalRoot.innerHTML = ''; };
+    modalRoot.querySelector('[data-close-modal]')?.addEventListener('click', close);
+    modalRoot.querySelector('.modal-backdrop')?.addEventListener('click', event => { if (event.target.classList.contains('modal-backdrop')) close(); });
+  }
+
+  function bindFoodRulesButtons() {
+    document.querySelectorAll('[data-open-food-rules]').forEach(button => button.addEventListener('click', openFoodRulesModal));
+  }
+
   function setupProgressHTML(step) {
     return `<div class="setup-progress"><div><span style="width:${Math.round((step / 6) * 100)}%"></span></div><strong>Step ${step} of 6</strong></div>`;
   }
@@ -875,7 +935,7 @@
     let body = '';
 
     if (step === 1) {
-      body = `<div class="setup-card wizard-intro-card"><div class="setup-heading"><span>WELCOME</span><h1>Prepare first, then begin your seven days</h1><p>Watch the short introduction, or continue straight to setup. Day 0 helps you understand the progression, choose food you enjoy and shop before Day 1.</p></div><section class="intro-video-section" aria-label="Detox programme introduction video"><div id="introVideoMount" class="intro-video-mount"><button id="playIntroVideo" class="intro-video-poster" type="button" aria-label="Play the Detox introduction video"><img src="https://i.ytimg.com/vi/TY7_IW_RKbM/hqdefault.jpg" alt="Detox introduction video preview" loading="lazy" /><span class="intro-video-overlay"><span class="intro-play-icon">${icon('play', 34)}</span><strong>Watch the introduction</strong><small>Optional · opens here in the app</small></span></button></div><p class="intro-video-note">The video is optional. You can continue setup without watching it.</p></section><div class="phase-explainer large"><div><strong>Days 1–3</strong><span>Solid fruit-and-vegetable meals</span></div><div><strong>Day 4</strong><span>Filling soups and smoothies</span></div><div><strong>Days 5–7</strong><span>A mix of solid and liquid meals</span></div></div><div class="setup-explainer-grid"><article><span>${icon('leaf', 23)}</span><div><strong>Fresh food</strong><small>Plant-focused meals with optional low-fat plain yoghurt. No tofu, eggs, cheese or feta in the suggested programme.</small></div></article><article><span>${icon('phone', 23)}</span><div><strong>Phone reset</strong><small>Morning, mealtime and bedtime boundaries progress across the week.</small></div></article><article><span>${icon('walk', 23)}</span><div><strong>Daily movement</strong><small>Manageable walking, mobility and gentle strength every day.</small></div></article><article><span>${icon('moon', 23)}</span><div><strong>Sleep routine</strong><small>Your bedtime and wake time create each day’s wind-down plan.</small></div></article></div><div class="safety-note"><strong>Day 4 is not a fast.</strong><span>It uses substantial soups and smoothies rather than juice alone. If you are hungry or do not feel well, add more food or choose a solid meal.</span></div></div>`;
+      body = `<div class="setup-card wizard-intro-card"><div class="setup-heading"><span>WELCOME</span><h1>Prepare first, then begin your seven days</h1><p>Watch the short introduction, or continue straight to setup. Day 0 helps you understand the progression, choose food you enjoy and shop before Day 1.</p></div><section class="intro-video-section" aria-label="Detox programme introduction video"><div class="intro-video-mount"><div class="intro-video-frame"><iframe src="https://www.youtube-nocookie.com/embed/TY7_IW_RKbM?playsinline=1&rel=0" title="Detox — A 7 Day Fresh Start introduction" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div></div><p class="intro-video-note">The video is optional. Tap YouTube’s play button to watch, or continue setup without it.</p></section><div class="phase-explainer large"><div><strong>Days 1–3</strong><span>Solid fruit-and-vegetable meals</span></div><div><strong>Day 4</strong><span>Filling soups and smoothies</span></div><div><strong>Days 5–7</strong><span>A mix of solid and liquid meals</span></div></div>${freshStartRulesHTML(false)}<div class="setup-explainer-grid"><article><span>${icon('leaf', 23)}</span><div><strong>Fresh food</strong><small>Plant-focused meals with optional low-fat plain yoghurt. No tofu, eggs, cheese or feta in the suggested programme.</small></div></article><article><span>${icon('phone', 23)}</span><div><strong>Phone reset</strong><small>Morning, mealtime and bedtime boundaries progress across the week.</small></div></article><article><span>${icon('walk', 23)}</span><div><strong>Daily movement</strong><small>Manageable walking, mobility and gentle strength every day.</small></div></article><article><span>${icon('moon', 23)}</span><div><strong>Sleep routine</strong><small>Your bedtime and wake time create each day’s wind-down plan.</small></div></article></div><div class="safety-note"><strong>Day 4 is not a fast.</strong><span>It uses substantial soups and smoothies rather than juice alone. If you are hungry or do not feel well, add more food or choose a solid meal.</span></div></div>`;
     }
 
     if (step === 2) {
@@ -895,18 +955,11 @@
     }
 
     if (step === 6) {
-      body = `<div class="setup-card preparation-card"><div class="setup-heading"><span>FINAL PREPARATION</span><h2>Prepare for Day 1</h2><p>These checks can be updated later from the waiting screen if your start date is still a few days away.</p></div><div class="readiness-list"><label class="readiness-item"><input id="checkKitchen" type="checkbox" ${checks.kitchen ? 'checked' : ''} /><span class="readiness-check">${icon('check', 17)}</span><span><strong>My shopping is ready or planned</strong><small>I have reviewed the recipe-based list and know what I still need.</small></span></label><label class="readiness-item"><input id="checkPhone" type="checkbox" ${checks.phone ? 'checked' : ''} /><span class="readiness-check">${icon('check', 17)}</span><span><strong>My phone has a parking place</strong><small>I know where it will stay during meals and the evening wind-down.</small></span></label><label class="readiness-item"><input id="checkMovement" type="checkbox" ${checks.movement ? 'checked' : ''} /><span class="readiness-check">${icon('check', 17)}</span><span><strong>I have a movement option</strong><small>I have a safe route or a small indoor space.</small></span></label><label class="readiness-item"><input id="checkUnderstanding" type="checkbox" ${checks.understanding ? 'checked' : ''} /><span class="readiness-check">${icon('check', 17)}</span><span><strong>I understand this is a flexible suggestion</strong><small>“Detox” is the programme name. This is not a medical detox, fast or treatment.</small></span></label></div></div>${dayOneBriefingHTML('setup')}<div id="setupError" class="setup-error hidden" role="alert"></div>`;
+      body = `<div class="setup-card preparation-card"><div class="setup-heading"><span>FINAL PREPARATION</span><h2>Prepare for Day 1</h2><p>These checks can be updated later from the waiting screen if your start date is still a few days away.</p></div><div class="readiness-list"><label class="readiness-item"><input id="checkKitchen" type="checkbox" ${checks.kitchen ? 'checked' : ''} /><span class="readiness-check">${icon('check', 17)}</span><span><strong>My shopping is ready or planned</strong><small>I have reviewed the recipe-based list and know what I still need.</small></span></label><label class="readiness-item"><input id="checkPhone" type="checkbox" ${checks.phone ? 'checked' : ''} /><span class="readiness-check">${icon('check', 17)}</span><span><strong>My phone has a parking place</strong><small>I know where it will stay during meals and the evening wind-down.</small></span></label><label class="readiness-item"><input id="checkMovement" type="checkbox" ${checks.movement ? 'checked' : ''} /><span class="readiness-check">${icon('check', 17)}</span><span><strong>I have a movement option</strong><small>I have a safe route or a small indoor space.</small></span></label><label class="readiness-item"><input id="checkUnderstanding" type="checkbox" ${checks.understanding ? 'checked' : ''} /><span class="readiness-check">${icon('check', 17)}</span><span><strong>I understand this is a flexible suggestion</strong><small>“Detox” is the programme name. This is general wellbeing guidance, not a medical detox, fast, diagnosis or treatment.</small></span></label></div></div>${dayOneBriefingHTML('setup')}<div id="setupError" class="setup-error hidden" role="alert"></div>`;
     }
 
     main.innerHTML = setupWizardShell(step, body, step === 6 ? 'Complete setup' : 'Continue');
 
-    if (step === 1) {
-      document.getElementById('playIntroVideo')?.addEventListener('click', () => {
-        const mount = document.getElementById('introVideoMount');
-        if (!mount) return;
-        mount.innerHTML = `<div class="intro-video-frame"><iframe src="https://www.youtube-nocookie.com/embed/TY7_IW_RKbM?playsinline=1&rel=0" title="Detox — A 7 Day Fresh Start introduction" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>`;
-      });
-    }
 
     const go = nextStep => { state.setupStep = Math.min(6, Math.max(1, nextStep)); saveState(); renderSetup(); };
     document.getElementById('setupBackBtn')?.addEventListener('click', () => go(step - 1));
@@ -980,12 +1033,13 @@
       document.querySelectorAll('[data-print-briefing]').forEach(button=>button.addEventListener('click',()=>window.print()));
       document.getElementById('setupNextBtn').addEventListener('click',()=>{
         saveChecks(); const error=document.getElementById('setupError');
-        if(!state.setupChecks.understanding){ error.textContent='Please confirm that you understand the programme is flexible and is not a medical detox or fast.'; error.classList.remove('hidden'); return; }
+        if(!state.setupChecks.understanding){ error.textContent='Please confirm that you understand the programme is flexible, is not medical advice and is not a medical detox or fast.'; error.classList.remove('hidden'); return; }
         state.setupComplete=true; state.onboarded=true; state.setupVersion=13; state.view='today'; saveState(); render();
       });
       return;
     }
 
+    bindFoodRulesButtons();
     document.getElementById('setupNextBtn').addEventListener('click', () => go(step + 1));
   }
 
@@ -1082,13 +1136,14 @@
     const pct = completionPct(day);
     const windDownTime = subtractMinutes(state.profile.bedtime, plan.sleep.windDown);
     const behind = scheduledDay() > day;
-    main.innerHTML = `<section class="day-hero"><div class="hero-copy"><span class="eyebrow">DAY ${day} OF 7 · ${escapeHTML(plan.phase)}</span><h1>${escapeHTML(plan.title)}</h1><p>${escapeHTML(plan.subtitle)}</p></div><div class="progress-orb" style="--pct:${pct}"><div><strong>${pct}%</strong><span>actions</span></div></div></section>${behind ? `<div class="recovery-banner"><span>${icon('calendar',22)}</span><div><strong>You are continuing Day ${day}</strong><p>The calendar has moved on, but this day is unfinished. Continue it, or skip it deliberately.</p></div><button id="skipDayBtn" type="button">Skip to Day ${Math.min(7,day+1)}</button></div>`:''}${morningSleepCheckInHTML(day, d, true)}<div class="section-heading"><div><span>TODAY'S FOUR ACTIONS</span><h2>Complete these before worrying about tracking</h2></div></div><div class="protocol-card-list">${['food','phone','movement','sleep'].map(type=>protocolCardHTML(type,plan[type],d,day)).join('')}</div>${dayMealPlanHTML(day)}<div class="anchor-strip"><div><span>${icon('clock',19)}</span><small>Wind-down starts</small><strong>${formatTime(windDownTime)}</strong></div><div><span>${icon('sun',19)}</span><small>Wake anchor</small><strong>${formatTime(state.profile.wakeTime)}</strong></div></div>${optionalDetoxHTML(day, d)}<div class="section-heading"><div><span>OPTIONAL DAILY NOTES · ${checkInPct(day)}%</span><h2>Record what happened during the day</h2></div><button id="editTracking" class="link-button" type="button">Add details</button></div><div class="metric-grid three-metrics">${metricHTML('water','Water',safeNumber(d.water)?`${safeNumber(d.water)} cups`:'Not logged')}${metricHTML('walk','Movement',d.movementMinutes!==''?`${escapeHTML(d.movementMinutes)} min`:'Not logged')}${metricHTML('phone','Phone use',formatPhoneDuration(d.phoneTotalMinutes,d.phone))}</div><div class="quick-log-card"><div><span class="quick-log-icon">${icon('water',24)}</span><div><strong>Water so far</strong><small>This does not affect your programme-completion score.</small></div></div><div class="stepper"><button id="waterMinus" type="button">${icon('minus',18)}</button><strong>${safeNumber(d.water)}</strong><button id="waterAdd" type="button">${icon('plus',18)}</button></div></div>${nextDayBriefingHTML(day)}`;
+    main.innerHTML = `<section class="day-hero"><div class="hero-copy"><span class="eyebrow">DAY ${day} OF 7 · ${escapeHTML(plan.phase)}</span><h1>${escapeHTML(plan.title)}</h1><p>${escapeHTML(plan.subtitle)}</p></div><div class="progress-orb" style="--pct:${pct}"><div><strong>${pct}%</strong><span>actions</span></div></div></section>${behind ? `<div class="recovery-banner"><span>${icon('calendar',22)}</span><div><strong>You are continuing Day ${day}</strong><p>The calendar has moved on, but this day is unfinished. Continue it, or skip it deliberately.</p></div><button id="skipDayBtn" type="button">Skip to Day ${Math.min(7,day+1)}</button></div>`:''}${morningSleepCheckInHTML(day, d, true)}<div class="section-heading"><div><span>TODAY'S FOUR ACTIONS</span><h2>Complete these before worrying about tracking</h2></div></div><div class="protocol-card-list">${['food','phone','movement','sleep'].map(type=>protocolCardHTML(type,plan[type],d,day)).join('')}</div>${dayMealPlanHTML(day)}${foodRulesAccessCardHTML()}<div class="anchor-strip"><div><span>${icon('clock',19)}</span><small>Wind-down starts</small><strong>${formatTime(windDownTime)}</strong></div><div><span>${icon('sun',19)}</span><small>Wake anchor</small><strong>${formatTime(state.profile.wakeTime)}</strong></div></div>${optionalDetoxHTML(day, d)}<div class="section-heading"><div><span>OPTIONAL DAILY NOTES · ${checkInPct(day)}%</span><h2>Record what happened during the day</h2></div><button id="editTracking" class="link-button" type="button">Add details</button></div><div class="metric-grid three-metrics">${metricHTML('water','Water',safeNumber(d.water)?`${safeNumber(d.water)} / 8 cups`:'2 L target')}${metricHTML('walk','Movement',d.movementMinutes!==''?`${escapeHTML(d.movementMinutes)} min`:'Not logged')}${metricHTML('phone','Phone use',formatPhoneDuration(d.phoneTotalMinutes,d.phone))}</div><div class="quick-log-card"><div><span class="quick-log-icon">${icon('water',24)}</span><div><strong>Water so far</strong><small>Daily target: 2 litres, approximately eight 250 ml cups. This does not affect your completion score.</small></div></div><div class="stepper"><button id="waterMinus" type="button">${icon('minus',18)}</button><strong>${safeNumber(d.water)}</strong><button id="waterAdd" type="button">${icon('plus',18)}</button></div></div>${nextDayBriefingHTML(day)}`;
     bindTaskButtons(day);
     bindMorningSleepCheckIn(day, renderToday);
     bindOptionalDetoxButtons(day, renderToday);
     bindRecipeCards();
     document.querySelectorAll('[data-setup-recipe]').forEach(button=>button.addEventListener('click',()=>openRecipe(button.dataset.setupRecipe)));
     document.getElementById('editTracking').addEventListener('click',()=>renderDayDetail(day,true));
+    bindFoodRulesButtons();
     document.getElementById('waterAdd').addEventListener('click',()=>{d.water=safeNumber(d.water)+1;saveState();renderToday();});
     document.getElementById('waterMinus').addEventListener('click',()=>{d.water=Math.max(0,safeNumber(d.water)-1);saveState();renderToday();});
     document.getElementById('skipDayBtn')?.addEventListener('click',()=>{ if(!window.confirm(`Skip Day ${day}? You can still preview it later.`)) return; d.skipped=true; saveState(); renderToday(); });
@@ -1295,13 +1350,17 @@
     });
   }
 
+  function allowedRecipeLibrary() {
+    return recipes.filter(programmeRecipeAllowed);
+  }
+
   function categories() {
-    return ['All', ...Array.from(new Set(recipes.map(r => r.category))), 'Favourites'];
+    return ['All', ...Array.from(new Set(allowedRecipeLibrary().map(r => r.category))), 'Favourites'];
   }
 
   function filteredRecipes() {
     const q = state.recipeSearch.trim().toLowerCase();
-    return recipes.filter(r => {
+    return allowedRecipeLibrary().filter(r => {
       const categoryMatch = state.recipeCategory === 'All' || (state.recipeCategory === 'Favourites' ? favourites.includes(r.id) : r.category === state.recipeCategory);
       const searchMatch = !q || [r.title, r.category, ...(r.ingredients || []), ...(r.tags || [])].join(' ').toLowerCase().includes(q);
       return categoryMatch && searchMatch;
@@ -1322,10 +1381,11 @@
     main.innerHTML = `
       <section class="page-hero recipe-hero with-hero-art">
         <span class="eyebrow">FRESH START RECIPES</span>
-        <h1>${recipes.length} vegetarian recipes with no tofu</h1>
-        <p>Fruit salads, smoothies, soups, stir-fries, vegetable meals and air-fryer ideas — bright, simple and easy to use.</p>
+        <h1>${allowedRecipeLibrary().length} recipes with no tofu, nuts or seeds</h1>
+        <p>Fruit salads, smoothies, soups, stir-fries, vegetable meals and air-fryer ideas that follow the Fresh Start food rules.</p>
         ${heroArtHTML(APP_ART.recipes, 'Recipe illustration', 'hero-art-float')}
       </section>
+      ${foodRulesAccessCardHTML()}
       ${state.foodPreferences?.planGenerated ? `<div class="saved-food-plan-card"><img src="${escapeHTML(APP_ART.recipes)}" alt="" /><div><span>YOUR DAY 0 FOOD PLAN</span><h2>Shopping list and meal suggestions</h2><p>Review the flexible plan created from the foods you selected.</p><button id="reviewFoodPlanBtn" class="secondary-button" type="button">Review my food plan</button></div></div>` : ''}
       <div class="recipe-toolbar">
         <label class="search-wrap">${icon('search', 20)}<input id="recipeSearch" type="search" value="${escapeHTML(state.recipeSearch)}" placeholder="Search recipe or ingredient" /></label>
@@ -1334,6 +1394,7 @@
       <div class="recipe-count"><span>${list.length} recipes</span><span>${favourites.length} saved</span></div>
       ${list.length ? `<div class="recipe-grid">${list.map(recipeCardHTML).join('')}</div>` : `<div class="empty-state">${icon('search', 34)}<h3>No recipes found</h3><p>Try a different ingredient or category.</p></div>`}`;
 
+    bindFoodRulesButtons();
     document.getElementById('reviewFoodPlanBtn')?.addEventListener('click', openFoodPlanModal);
     const search = document.getElementById('recipeSearch');
     search.addEventListener('input', e => {
@@ -1385,7 +1446,7 @@
   }
 
   function openRecipe(id) {
-    const r = recipes.find(x => x.id === id);
+    const r = recipes.find(x => x.id === id && programmeRecipeAllowed(x));
     if (!r) return;
     const fav = favourites.includes(r.id);
     modalRoot.innerHTML = `
@@ -1397,7 +1458,7 @@
           <button id="modalFavourite" class="secondary-button" type="button">${icon('heart', 18)} ${fav ? 'Saved to favourites' : 'Save to favourites'}</button>
           <section class="detail-section"><h3>Ingredients</h3><ul>${r.ingredients.map(i => `<li>${escapeHTML(i)}</li>`).join('')}</ul></section>
           <section class="detail-section"><h3>Method</h3><ol>${r.method.map(m => `<li>${escapeHTML(m)}</li>`).join('')}</ol></section>
-          <div class="notice">Low-fat plain yoghurt is optional where listed. The recipe collection is vegetarian and contains no tofu.</div>
+          <div class="notice">Low-fat plain yoghurt is optional where listed. The programme recipe collection contains no tofu, nuts or edible seeds. Low-fat plain yoghurt is optional where listed.</div>
         </div>
       </div>`;
 
@@ -1421,6 +1482,7 @@
     modalRoot.querySelector('[data-close-modal]').addEventListener('click', close);
     modalRoot.querySelector('.modal-backdrop').addEventListener('click', event => { if (event.target.classList.contains('modal-backdrop')) close(); });
     modalRoot.querySelectorAll('[data-setup-recipe]').forEach(button => button.addEventListener('click', () => openRecipe(button.dataset.setupRecipe)));
+    modalRoot.querySelectorAll('[data-open-food-rules]').forEach(button => button.addEventListener('click', openFoodRulesModal));
     bindShoppingChecks();
     modalRoot.querySelectorAll('[data-recipe-card]').forEach(card => card.addEventListener('click', event => { if (!event.target.closest('[data-favourite]')) openRecipe(card.dataset.recipeCard); }));
     document.getElementById('editFoodChoicesBtn').addEventListener('click', () => {

@@ -43,13 +43,11 @@ window.FRESH_START_RECIPES = [
       "1 cup blueberries or mixed berries",
       "1 banana, sliced",
       "1 cup low-fat plain yoghurt",
-      "1 tablespoon pumpkin or sunflower seeds",
       "Pinch of cinnamon"
     ],
     "method": [
       "Divide the fruit between two bowls.",
-      "Spoon over the yoghurt.",
-      "Finish with seeds and cinnamon."
+      "Spoon over the yoghurt."
     ]
   },
   {
@@ -95,13 +93,11 @@ window.FRESH_START_RECIPES = [
       "1½ cups grapes, halved",
       "½ cup low-fat plain yoghurt",
       "Juice of ½ lemon",
-      "1 tablespoon chopped nuts or seeds, optional",
       "Pinch of cinnamon"
     ],
     "method": [
       "Mix the yoghurt, lemon juice and cinnamon.",
-      "Fold the dressing through the fruit.",
-      "Top with nuts or seeds if using."
+      "Fold the dressing through the fruit."
     ]
   },
   {
@@ -220,13 +216,11 @@ window.FRESH_START_RECIPES = [
       "1 banana, sliced",
       "1 apple, chopped",
       "¾ cup low-fat plain yoghurt",
-      "1 tablespoon pumpkin or sunflower seeds",
       "Cinnamon"
     ],
     "method": [
       "Divide the fruit between two bowls.",
-      "Add the yoghurt.",
-      "Sprinkle with seeds and cinnamon."
+      "Add the yoghurt."
     ]
   },
   {
@@ -364,8 +358,7 @@ window.FRESH_START_RECIPES = [
       "1 peach or nectarine, chopped",
       "½ cup frozen berries",
       "¾ cup low-fat plain yoghurt",
-      "½ cup water",
-      "1 teaspoon chia seeds, optional"
+      "½ cup water"
     ],
     "method": [
       "Blend until smooth.",
@@ -394,29 +387,6 @@ window.FRESH_START_RECIPES = [
     "method": [
       "Blend until the carrot is completely smooth.",
       "Add water to adjust consistency."
-    ]
-  },
-  {
-    "id": "banana-peanut-butter-smoothie",
-    "title": "Banana Peanut Butter Smoothie",
-    "category": "Smoothies",
-    "emoji": "🥜",
-    "time": "5 min",
-    "serves": 1,
-    "tags": [
-      "Low-fat yoghurt",
-      "Filling"
-    ],
-    "ingredients": [
-      "1 small banana",
-      "¾ cup low-fat plain yoghurt",
-      "1 teaspoon unsweetened peanut butter",
-      "½ cup water",
-      "Pinch of cinnamon"
-    ],
-    "method": [
-      "Blend until creamy.",
-      "Use extra water if needed."
     ]
   },
   {
@@ -890,13 +860,11 @@ window.FRESH_START_RECIPES = [
       "2 garlic cloves",
       "1 teaspoon grated ginger",
       "2 tablespoons low-sodium soy sauce",
-      "Juice of 1 lime",
-      "2 tablespoons sesame seeds"
+      "Juice of 1 lime"
     ],
     "method": [
       "Cook onion, garlic and ginger with a splash of water or oil for 2 minutes.",
-      "Add carrots and broccoli for 3 minutes, then remaining vegetables.",
-      "Add soy sauce and lime juice; finish with sesame seeds."
+      "Add carrots and broccoli for 3 minutes, then remaining vegetables."
     ]
   },
   {
@@ -1007,13 +975,11 @@ window.FRESH_START_RECIPES = [
       "2 garlic cloves",
       "1 teaspoon grated ginger",
       "2 tablespoons low-sodium soy sauce",
-      "Juice of ½ lime",
-      "1 tablespoon sesame seeds"
+      "Juice of ½ lime"
     ],
     "method": [
       "Stir-fry the mushrooms and broccoli for 5 minutes.",
-      "Add peppers, spring onions, garlic and ginger.",
-      "Add soy sauce and lime; cook until vegetables are just tender and top with sesame seeds."
+      "Add peppers, spring onions, garlic and ginger."
     ]
   },
   {
@@ -1041,35 +1007,6 @@ window.FRESH_START_RECIPES = [
       "Cook onion, mushrooms and pepper over high heat.",
       "Add sweet potato, paprika and cumin; cook until browned.",
       "Fold through kale or spinach and finish with lemon."
-    ]
-  },
-  {
-    "id": "sesame-green-bean-and-vegetable-stir-fry",
-    "title": "Sesame Green Bean and Vegetable Stir-Fry",
-    "category": "Stir-Fries",
-    "emoji": "🫛",
-    "time": "18 min",
-    "serves": 4,
-    "tags": [
-      "Quick",
-      "No legumes"
-    ],
-    "ingredients": [
-      "2 cups green beans, trimmed",
-      "2 carrots, cut into strips",
-      "1 red pepper, sliced",
-      "1 courgette, sliced",
-      "1 onion, sliced",
-      "2 garlic cloves",
-      "1 teaspoon ginger",
-      "2 tablespoons low-sodium soy sauce",
-      "1 teaspoon sesame oil, optional",
-      "1 tablespoon sesame seeds"
-    ],
-    "method": [
-      "Stir-fry onion, carrots and green beans for 5 minutes.",
-      "Add pepper, courgette, garlic and ginger.",
-      "Add soy sauce and sesame oil; top with sesame seeds."
     ]
   },
   {

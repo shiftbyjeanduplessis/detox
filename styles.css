@@ -2226,3 +2226,180 @@ button:disabled { cursor: not-allowed; }
   .intro-video-section { padding: 9px; }
   .intro-video-mount { width: min(100%, 285px); }
 }
+
+
+/* v23 food rules, safety guidance and permanent access */
+.fresh-start-rules {
+  margin: 16px 0;
+  padding: 17px;
+  border: 1px solid #d9cce3;
+  border-radius: 22px;
+  background: #fffefd;
+  box-shadow: var(--soft-shadow);
+}
+.fresh-start-rules.compact {
+  margin: 13px 0;
+  padding: 14px;
+  box-shadow: none;
+  background: #fffbf4;
+}
+.food-rules-heading {
+  display: grid;
+  grid-template-columns: 45px 1fr;
+  gap: 11px;
+  align-items: start;
+}
+.food-rules-heading > span {
+  display: grid;
+  place-items: center;
+  width: 43px;
+  height: 43px;
+  border-radius: 14px;
+  color: var(--green);
+  background: var(--green-soft);
+}
+.food-rules-heading small,
+.food-rules-access-card small {
+  display: block;
+  color: var(--pink);
+  font-size: 0.66rem;
+  font-weight: 950;
+  letter-spacing: 0.1em;
+}
+.food-rules-heading h2,
+.food-rules-access-card h2 {
+  margin: 3px 0 5px;
+  color: var(--purple-dark);
+  font-size: 1.05rem;
+  line-height: 1.15;
+}
+.food-rules-heading p,
+.food-rules-access-card p {
+  margin: 0;
+  color: #5f5366;
+  font-size: 0.79rem;
+  line-height: 1.48;
+}
+.food-rules-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 13px;
+}
+.food-rule-list {
+  padding: 13px;
+  border-radius: 17px;
+}
+.food-rule-list.do {
+  border: 1px solid #bfe2d2;
+  background: #f3fcf7;
+}
+.food-rule-list.dont {
+  border: 1px solid #f0c9c9;
+  background: #fff7f7;
+}
+.food-rule-list h3 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 8px;
+  color: var(--purple-dark);
+  font-size: 0.86rem;
+}
+.food-rule-list.do h3 { color: #267b59; }
+.food-rule-list.dont h3 { color: #a43b4c; }
+.food-rule-list ul {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding-left: 18px;
+}
+.food-rule-list li {
+  color: #514758;
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+.headache-guidance,
+.programme-disclaimer {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 9px;
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 16px;
+}
+.headache-guidance {
+  color: #67501f;
+  background: #fff5d8;
+  border: 1px solid #eed89b;
+}
+.headache-guidance > span {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 11px;
+  background: rgba(255,255,255,0.72);
+}
+.headache-guidance strong,
+.programme-disclaimer strong {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 0.78rem;
+}
+.headache-guidance p,
+.programme-disclaimer p {
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.48;
+}
+.programme-disclaimer {
+  display: block;
+  color: #5e5067;
+  background: #f6f0fa;
+  border: 1px solid #dfd0e7;
+}
+.food-rules-access-card {
+  display: grid;
+  grid-template-columns: 46px 1fr auto;
+  gap: 11px;
+  align-items: center;
+  margin: 12px 0;
+  padding: 14px;
+  border: 1px solid #d9cce3;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.98);
+  box-shadow: var(--soft-shadow);
+}
+.food-rules-access-card > span {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  color: var(--green);
+  background: var(--green-soft);
+}
+.food-rules-access-card .secondary-button {
+  width: auto;
+  min-height: 42px;
+  margin: 0;
+  white-space: nowrap;
+}
+.food-rules-modal .fresh-start-rules {
+  margin: 0;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+}
+@media (max-width: 560px) {
+  .food-rules-grid { grid-template-columns: 1fr; }
+  .food-rules-access-card {
+    grid-template-columns: 44px 1fr;
+  }
+  .food-rules-access-card .secondary-button {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+  .fresh-start-rules { padding: 14px; }
+}
